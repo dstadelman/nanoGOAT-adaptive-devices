@@ -71,3 +71,11 @@ boot, so a test harness can parse it:
 
 Every relay transition, command, connection change, and rejected command is
 logged.
+
+Any input received over serial prints one `STATUS` line with the firmware
+version, connection state, relay state, and battery reading. A person with a
+Serial Monitor open can confirm the board is alive without pressing a button:
+
+```
+[  81234] STATUS fw=0.1.0 ble=advertising relay=off mode=idle last_off=boot battery_mv=0
+```

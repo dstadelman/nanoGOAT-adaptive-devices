@@ -6,242 +6,185 @@ A small battery-powered Bluetooth box that lets the
 seconds, and the bubble machine runs.
 
 The box plugs into a toy through a standard 3.5mm headphone-size jack. This is
-the same plug that accessibility switches such as the AbleNet Big Red use, so
-the box works with any toy that is already "switch adapted."
+the same plug that accessibility switches such as the AbleNet Big Red use.
 
-This guide assumes no prior experience with electronics or programming. Follow
-the steps in order. Each step says how to tell that it worked.
+## Where this project is
 
-- [1. What you need](#1-what-you-need)
-- [2. Install the software](#2-install-the-software)
-- [3. Put the firmware on the board](#3-put-the-firmware-on-the-board)
-- [4. Check that it works](#4-check-that-it-works)
-- [5. Build the box](#5-build-the-box)
-- [Troubleshooting](#troubleshooting)
-- [For contributors](#for-contributors)
+The firmware runs on a bare XIAO ESP32C6 board, and a computer can control it
+over Bluetooth. The box itself (relay, battery, jack, enclosure) is designed
+but not yet built.
+
+This guide lists only steps that were done and checked, on **Windows 11**.
+[What has not been tried yet](#what-has-not-been-tried-yet) lists the rest.
 
 ## 1. What you need
 
-### To try the firmware (no soldering)
-
 | Item | Notes |
 |------|-------|
-| **Seeed Studio XIAO ESP32C6** | The small board that runs everything. Make sure it says **ESP32C6**; other XIAO boards need different settings. |
-| **USB-C data cable** | Many USB-C cables only charge and carry no data. If your computer never sees the board, try another cable first. |
-| **A computer** | Windows, macOS, or Linux, with about **8 GB of free disk space** for the tools. |
-| **A phone or tablet** (optional) | For testing with the free **nRF Connect** app, or with a nanoGOAT AAC development build. |
+| **Seeed Studio XIAO ESP32C6** | Make sure it says **ESP32C6**. Other XIAO boards need different settings. |
+| **USB-C cable** | It must carry data, not only charge. |
+| **A Windows computer** | About **8 GB** of free disk space for the tools, and Bluetooth for step 5. |
 
-This is enough to complete steps 2 to 4. The board's small built-in LED stands
+No soldering is needed for this guide. The board's small **orange LED** stands
 in for the toy.
 
-### To build the whole box
+## 2. Install Arduino IDE
 
-The complete parts list, with what each part does, is in
-[`_specs/BOM.md`](_specs/BOM.md). You also need a soldering iron, solder, wire
-strippers, and a multimeter.
-
-## 2. Install the software
-
-You install three things. Allow about an hour, most of it waiting for
-downloads.
-
-### 2a. Arduino IDE
-
-Arduino IDE is the free program that turns the firmware source code into a file
-the board can run, and copies that file onto the board.
+Arduino IDE turns the firmware source code into a program the board can run,
+and copies it onto the board.
 
 1. Download **Arduino IDE 2** from <https://www.arduino.cc/en/software> and
-   install it. (Tested with version 2.3.10.)
-2. Open it once so it finishes its own setup.
+   install it. (Used here: version 2.3.10.)
+2. Open it once, then close it.
 
-### 2b. Support for the XIAO ESP32C6 board
-
-Out of the box, Arduino IDE only knows Arduino's own boards. The XIAO ESP32C6
-uses an **Espressif ESP32-C6** chip, so you add Espressif's free **esp32 board
-package**. This package contains:
-
-- the **RISC-V compiler** (`esp-rv32`) that builds programs for the ESP32-C6's
-  processor,
-- Espressif's prebuilt chip libraries, including Bluetooth, and
-- `esptool`, which copies the program onto the board.
-
-It also installs compilers for other ESP32 chips that this project does not
-use. The download is about 2 GB, and the installed package takes about
-**6.5 GB**. You do this once per computer.
-
-1. In Arduino IDE, open **File → Preferences** (on macOS: **Arduino IDE →
-   Settings**).
-2. In **Additional boards manager URLs**, paste:
-
-   ```
-   https://espressif.github.io/arduino-esp32/package_esp32_index.json
-   ```
-
-   Click **OK**.
-3. Open **Tools → Board → Boards Manager**.
-4. Search for **esp32**. Find **esp32 by Espressif Systems** (not "Arduino
-   ESP32 Boards") and click **Install**. (Tested with version 3.3.12.)
-5. Wait. The progress bar can sit on one large file for many minutes. If the
-   download fails partway, click **Install** again.
-
-**It worked when** **Tools → Board → esp32** lists **XIAO_ESP32C6**.
-
-This is the same setup Seeed describes on the
-[XIAO ESP32C6 getting-started page](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/).
-
-### 2c. Get this project
-
-Download this repository to your computer:
-
-- **Without git:** on the GitHub page, click **Code → Download ZIP**, then
-  unzip it.
-- **With git:** `git clone https://github.com/dstadelman/nanoGOAT-adaptive-devices.git`
-
-## 3. Put the firmware on the board
-
-"Firmware" is the program that runs on the board. It lives in
-[`firmware/adaptive_controller/adaptive_controller.ino`](firmware/adaptive_controller/adaptive_controller.ino).
-
-1. Plug the XIAO into your computer with the USB-C cable.
-2. In Arduino IDE, open **File → Open** and choose
-   `adaptive-controller/firmware/adaptive_controller/adaptive_controller.ino`.
-3. Choose the board: **Tools → Board → esp32 → XIAO_ESP32C6**.
-4. Turn on USB logging: **Tools → USB CDC On Boot → Enabled**. Without this,
-   the board runs but prints nothing to your computer.
-5. Choose the port: **Tools → Port**, then pick the new entry that appeared
-   when you plugged in the board:
-   - Windows: `COM3`, `COM4`, or similar
-   - macOS: `/dev/cu.usbmodem…`
-   - Linux: `/dev/ttyACM0`
-6. Click **Upload** (the right-arrow button). The first build takes a few
-   minutes; later builds are faster.
-
-**It worked when** the output panel ends with `Hash of data verified.` and
-`Hard resetting via RTS pin...`.
-
-## 4. Check that it works
-
-### 4a. Watch the board's log
-
-1. Open **Tools → Serial Monitor** and set the speed to **115200 baud**.
-2. Press the tiny **Reset** button on the XIAO. (It has two buttons, **BOOT**
-   and **Reset**; see the photo on Seeed's getting-started page.)
-
-You see lines like these:
+Arduino IDE includes a command-line program, `arduino-cli`, which this guide
+uses. On Windows it is at:
 
 ```
-[    312] BOOT fw=0.1.0 proto=1 battery_sense=0
-[    420] ADV start
+%LOCALAPPDATA%\Programs\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe
 ```
 
-`ADV start` means the board is advertising over Bluetooth as
-**nanoGOAT Controller**. The board only prints when something happens, so a
-quiet Serial Monitor after that is normal.
+The commands below write `arduino-cli`. Type the full path above in its place,
+in quotes, or add that folder to your PATH.
 
-### 4b. Run the toy from a phone (nRF Connect)
+## 3. Add support for the ESP32-C6 chip
 
-**nRF Connect for Mobile** is a free app from Nordic Semiconductor for talking
-to Bluetooth devices. It is on the App Store and Google Play.
+Arduino IDE only knows Arduino's own boards. The XIAO ESP32C6 uses an
+**Espressif ESP32-C6** chip, so you install Espressif's **esp32** package. It
+contains the **RISC-V compiler** that builds programs for the ESP32-C6's
+processor, Espressif's chip libraries (including Bluetooth), and the tool that
+copies programs onto the board.
 
-1. Open nRF Connect and tap **Scan**.
-2. Find **nanoGOAT Controller** and tap **Connect**.
-3. Open the service that starts with `54ce0001`.
-4. On the characteristic that starts with `54ce0002`, tap the **up arrow**
-   (write). Choose the byte array format and enter `0188130000`. Tap **Send**.
+In a terminal, run:
 
-**It worked when** the small orange LED on the XIAO lights for 5 seconds and
-then turns off by itself. The Serial Monitor shows `RELAY ON` and then
-`RELAY OFF reason=timer`.
+```sh
+arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+```
 
-`0188130000` means "run for 5000 milliseconds." All commands are listed in
-[`_specs/BLE_PROTOCOL.md`](_specs/BLE_PROTOCOL.md).
+What to expect:
 
-### 4c. Run the full test from a computer (optional)
+- The download is about **2 GB**. The installed package takes about **6.5 GB**.
+  It includes compilers for other ESP32 chips that this project does not use.
+- The largest file is the RISC-V compiler, about 670 MB. Here, the download
+  failed partway once (`Download failed ... connection was aborted`). Running
+  the same command again finished the install.
 
-[`tools/ble_smoke_test.py`](tools/ble_smoke_test.py) connects over your
-computer's Bluetooth, tries every command, and checks every safety rule it can
-observe: the timer ends a run, the 60-second limit holds, and the box stops
-when the connection drops.
+**It worked when** `arduino-cli core list` shows `esp32:esp32` (used here:
+version 3.3.12).
 
-1. Install [Python 3](https://www.python.org/downloads/).
-2. Close the Arduino Serial Monitor, because only one program can use the port.
-3. Run, from the `adaptive-controller` folder:
+## 4. Put the firmware on the board
+
+"Firmware" is the program that runs on the board. It is in
+[`firmware/adaptive_controller/`](firmware/adaptive_controller/).
+
+1. Download this repository: on GitHub, click **Code → Download ZIP** and
+   unzip it. Open a terminal in the `adaptive-controller` folder.
+2. Plug the XIAO into the computer.
+3. Find its port:
 
    ```sh
-   pip install bleak pyserial
-   python tools/ble_smoke_test.py --serial COM3
+   arduino-cli board list
    ```
 
-   Use your own port name in place of `COM3`. Add `--long` to also wait out the
-   60-second maximum run.
+   The board appears as a `Serial Port (USB)`, for example `COM3`.
+4. Build and upload, using your port in place of `COM3`:
 
-**It worked when** the last line says `ALL CHECKS PASSED`.
+   ```sh
+   arduino-cli compile -b esp32:esp32:XIAO_ESP32C6:CDCOnBoot=cdc -u -p COM3 firmware/adaptive_controller
+   ```
 
-### 4d. Run it from nanoGOAT AAC
+   `CDCOnBoot=cdc` lets the board print messages to the computer over USB.
+   The first build takes a few minutes.
 
-The nanoGOAT AAC app has a hidden test screen for the box. It exists only in
-development builds. Maintainers: see
-[`nanoGOAT-aac-app/_specs/ADAPTIVE_CONTROLLER.md`](https://github.com/dstadelman/nanoGOAT-aac-app/blob/main/_specs/ADAPTIVE_CONTROLLER.md).
+**It worked when** the output ends with `Hash of data verified.` and
+`Hard resetting via RTS pin...`. No buttons on the board need to be pressed.
 
-## 5. Build the box
+## 5. Check that it works
 
-The electrical design is in [`_specs/HARDWARE.md`](_specs/HARDWARE.md). It
-covers which pin connects where, how power flows, and how to identify the
-jack's terminals with a multimeter. The schematic is
-[`kicad/adaptive-controller.pdf`](kicad/adaptive-controller.pdf).
+Install Python 3 from <https://www.python.org/downloads/>, then install the two
+libraries the test scripts use:
 
-Read [`_specs/SAFETY.md`](_specs/SAFETY.md) before you connect a battery or a
-toy. In short:
+```sh
+pip install pyserial bleak
+```
 
-- Use battery-powered toys only. Never connect the box to anything that plugs
-  into a wall outlet.
-- Check the battery connector's polarity with a multimeter before connecting
-  it. JST battery connectors are not wired the same way by every seller.
+### 5a. Ask the board how it is
 
-Step-by-step build guides (adapting the bubble machine, soldering the box, the
-enclosure) are in progress. See [Build phases](#build-phases).
+```sh
+python tools/status.py COM3
+```
 
-## Troubleshooting
+**It worked when** you see a line like:
 
-| Problem | What to try |
-|---------|-------------|
-| The esp32 download stops or fails | Click **Install** again. The largest file (the RISC-V compiler) is several hundred MB, and a slow connection can drop it. |
-| No new port appears under **Tools → Port** | Try a different USB-C cable; charge-only cables are common. Try a different USB port. |
-| Upload fails with "No serial data received" or "Failed to connect" | Put the board in download mode: unplug it, hold the **BOOT** button, plug the USB cable back in while still holding **BOOT**, then release it. Click **Upload** again. Press **Reset** afterward to run the new firmware. |
-| Serial Monitor shows nothing | Check **USB CDC On Boot → Enabled** and re-upload. Set the speed to 115200. Press **Reset** to see the boot lines. |
-| Serial Monitor shows garbled characters | Set the speed to **115200**. |
-| The phone cannot find **nanoGOAT Controller** | Make sure the board is powered and the Serial Monitor showed `ADV start`. The box accepts one connection at a time, so disconnect any other phone or computer. |
-| The test script cannot open the port | Close the Arduino Serial Monitor first. |
-| Linux: permission denied on `/dev/ttyACM0` | Add yourself to the `dialout` group (`sudo usermod -aG dialout $USER`), then log out and back in. |
+```
+[  35686] STATUS fw=0.1.0 ble=advertising relay=off mode=idle last_off=boot battery_mv=0
+```
 
-## For contributors
+`ble=advertising` means the board is waiting for a Bluetooth connection as
+**nanoGOAT Controller**. `relay=off` means the toy output is off.
 
-### Folder map
+### 5b. Run the full Bluetooth test
+
+[`tools/ble_smoke_test.py`](tools/ble_smoke_test.py) connects to the board over
+the computer's Bluetooth, sends every command, and checks every safety rule it
+can see from outside: a timed run ends on its own, the 60-second limit holds,
+and the output turns off when the connection drops.
+
+```sh
+python tools/ble_smoke_test.py --serial COM3
+```
+
+Add `--long` to also wait out the 60-second maximum run.
+
+**It worked when** the last line says `ALL CHECKS PASSED`. While it runs, the
+orange LED turns on and off.
+
+## What the lights mean
+
+| Light | Meaning |
+|-------|---------|
+| **Orange** on | The toy output is on. With a toy plugged in, the toy runs. |
+| **Orange** off | The toy output is off. |
+| **Red** | Not yet identified. |
+
+## Problems seen so far
+
+| Problem | What fixed it |
+|---------|---------------|
+| The esp32 install stopped with `Download failed` | Running the same install command again. |
+| The board restarted every time a script closed its USB connection | On this chip, two USB control lines double as the reset line. The scripts in `tools/` now release them in an order that does not restart the board. A program that closes the port without doing this restarts the board; that is harmless. |
+
+## What has not been tried yet
+
+- Installing the board support and uploading through the Arduino IDE's
+  windows and menus (this guide used the IDE's `arduino-cli`)
+- The Arduino IDE Serial Monitor
+- Controlling the board from a phone (for example with nRF Connect)
+- Controlling the board from the nanoGOAT AAC app on a real phone or tablet
+- macOS and Linux
+- Wiring the relay, battery, jack, and status LED, and running a real toy
+- Battery voltage measurement (the firmware reports `battery_mv=0` until the
+  divider is built)
+
+## Reference
 
 | Path | Contents |
 |------|----------|
 | [`_specs/`](_specs/README.md) | What the box does and must never do. The specs are normative: if anything else disagrees with them, the spec wins. |
-| [`kicad/`](kicad/) | KiCad 10 schematic project |
+| [`_specs/SAFETY.md`](_specs/SAFETY.md) | Read before connecting a battery or a toy |
+| [`_specs/HARDWARE.md`](_specs/HARDWARE.md) | Pins, power, jack wiring, netlist |
+| [`_specs/BOM.md`](_specs/BOM.md) | Parts list |
+| [`_specs/BLE_PROTOCOL.md`](_specs/BLE_PROTOCOL.md) | Bluetooth commands and status format |
+| [`kicad/`](kicad/) | KiCad 10 schematic ([PDF](kicad/adaptive-controller.pdf)) |
 | [`firmware/`](firmware/) | Arduino firmware |
-| [`tools/`](tools/) | PC-side test script |
-
-### Build from the command line
-
-`arduino-cli` is the command-line engine inside Arduino IDE. It is also
-available on its own from <https://arduino.github.io/arduino-cli/>.
-
-```sh
-arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-arduino-cli compile -b esp32:esp32:XIAO_ESP32C6:CDCOnBoot=cdc -u -p COM3 firmware/adaptive_controller
-```
+| [`tools/`](tools/) | `status.py` and `ble_smoke_test.py` |
 
 ### Edit the schematic
 
-Install [KiCad 10](https://www.kicad.org/download/), open
-`kicad/adaptive-controller.kicad_pro`, and double-click the schematic. The
-project symbols (XIAO ESP32C6, relay module) are in
-`kicad/adaptive-controller.kicad_sym`. After editing, re-export the SVG and PDF
-and check the netlist against HARDWARE §7. Run these in `kicad/`:
+Install [KiCad 10](https://www.kicad.org/download/) and open
+`kicad/adaptive-controller.kicad_pro`. After editing, check it and re-export.
+Run these in `kicad/`. On Windows, `kicad-cli` is in
+`%LOCALAPPDATA%\Programs\KiCad\10.0\bin`.
 
 ```sh
 kicad-cli sch erc adaptive-controller.kicad_sch
@@ -251,15 +194,12 @@ kicad-cli sch export netlist -o adaptive-controller.net adaptive-controller.kica
 python check_netlist.py adaptive-controller.net
 ```
 
-On Windows, `kicad-cli` is in KiCad's `bin` folder, for example
-`%LOCALAPPDATA%\Programs\KiCad\10.0\bin`.
-
 ### Build phases
 
 Each phase adds its spec to `_specs/` and stops for review.
 
 1. Hardware design and schematic ← *in review*
 2. Toy adaptation: add a 3.5mm jack to the bubble machine
-3. Firmware and BLE protocol ← *running on a bare XIAO; BLE checks pass*
-4. Bench test (verifiable from serial logs)
+3. Firmware and BLE protocol ← *runs on a bare board; Bluetooth test passes*
+4. Bench test
 5. Enclosure layout

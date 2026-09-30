@@ -5,8 +5,8 @@ physical world. Everything here is low-voltage, battery-powered, and built from
 off-the-shelf parts so it can be reproduced at a kitchen table.
 
 > **New here? Start with the [Adaptive Controller guide](adaptive-controller/README.md).**
-> It walks you from nothing installed to a working Bluetooth toy controller,
-> with no prior experience assumed.
+> It takes you from nothing installed to a XIAO ESP32C6 board you can control
+> over Bluetooth, and says which steps have not been tried yet.
 
 Devices fall into two directions:
 

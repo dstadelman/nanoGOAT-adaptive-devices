@@ -65,6 +65,9 @@ def tail_serial(port, stop):
         line = s.readline()
         if line:
             log("BOX", line.decode(errors="replace").rstrip())
+    # RTS/DTR double as the ESP32-C6 reset line; a plain close restarts the box.
+    s.rts = False
+    s.dtr = False
     s.close()
 
 
@@ -207,14 +210,18 @@ def main():
     args = ap.parse_args()
 
     stop = threading.Event()
+    reader = None
     if args.serial:
-        threading.Thread(target=tail_serial, args=(args.serial, stop), daemon=True).start()
+        reader = threading.Thread(target=tail_serial, args=(args.serial, stop), daemon=True)
+        reader.start()
         time.sleep(0.5)
     try:
         asyncio.run(run(args.long))
     finally:
         time.sleep(0.5)
         stop.set()
+        if reader:
+            reader.join(timeout=2)  # let it release the port without resetting the box
 
     print()
     if failures:

@@ -298,6 +298,20 @@ static void updateStatusLed(uint32_t now) {
   digitalWrite(PIN_STATUS_LED, lit ? HIGH : LOW);
 }
 
+// ---- Serial status (FIRMWARE.md §6) ----
+
+// Any input from a Serial Monitor prints a STATUS line, so a person can see
+// the board is alive without pressing a button. One message (with or without
+// a line ending) prints one line.
+static void handleSerialInput() {
+  if (Serial.available() <= 0) return;
+  delay(20);  // let the rest of the message arrive
+  while (Serial.available() > 0) Serial.read();
+  logf("STATUS fw=%s ble=%s relay=%s mode=%s last_off=%s battery_mv=%u", FW_VERSION,
+       connected ? "connected" : "advertising", relayOn ? "on" : "off", MODE_NAMES[mode],
+       REASON_NAMES[lastOffReason], batteryMv);
+}
+
 // ---- Main ----
 
 void setup() {
@@ -372,6 +386,7 @@ void loop() {
     publishState(now);
   }
 
+  handleSerialInput();
   updateStatusLed(now);
   delay(5);
 }
