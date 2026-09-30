@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "adaptive-controller")(type "KiCad")(uri "${KIPRJMOD}/adaptive-controller.kicad_sym")(options "")(descr "Adaptive Controller project symbols"))
+)

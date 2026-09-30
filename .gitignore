@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+
+# KiCad backups, caches and local state
+*-backups/
+*.kicad_prl
+fp-info-cache
+_autosave-*
+*.lck
+# Generated netlist (re-export with kicad-cli, see adaptive-controller/README.md)
+*.net
