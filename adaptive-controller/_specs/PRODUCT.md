@@ -40,6 +40,20 @@ The app selects the mode per command. [SAFETY](SAFETY.md) bounds every mode.
 The timed duration is a setting stored on the box. It is never longer than the
 maximum on-time in [SAFETY](SAFETY.md).
 
+## 4a. Response time
+
+A child taps a word and expects the toy to answer at once. A delay the child
+can notice breaks the link between the word and the result.
+
+| Span | Limit |
+|------|-------|
+| Tap on the AAC board → toy starts | under **500 ms** |
+| Command arrives at the box → relay closed | under **50 ms** |
+
+The app holds the connection open before the child taps. Connecting takes
+seconds, so a tap never waits for a connection. Every command is sent the
+moment it is tapped, never behind an earlier command that has not completed.
+
 ## 5. Status LED
 
 One LED on the outside of the box shows the state.
