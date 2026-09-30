@@ -139,6 +139,25 @@ Add `--long` to also wait out the 60-second maximum run.
 **It worked when** the last line says `ALL CHECKS PASSED`. While it runs, the
 orange LED turns on and off.
 
+### 5c. Measure how fast it answers
+
+A child's tap has to start the toy in under 500 ms
+([`_specs/PRODUCT.md`](_specs/PRODUCT.md) §4a).
+[`tools/latency.py`](tools/latency.py) sends 20 short runs and times each one,
+from sending the command until the box reports the relay is on.
+
+```sh
+python tools/latency.py
+```
+
+Measured here, over 100 runs from a Windows 11 PC: median **57 ms**, slowest
+**139 ms**. The box's own log shows each relay closing in the same millisecond
+its command arrives; the rest is Bluetooth.
+
+The box accepts **one connection at a time**. If a tool says no Adaptive
+Controller was found, a phone or another program is probably connected to it.
+`python tools/status.py COM3` shows `ble=connected` in that case.
+
 ## What the lights mean
 
 | Light | Meaning |
@@ -177,7 +196,7 @@ orange LED turns on and off.
 | [`_specs/BLE_PROTOCOL.md`](_specs/BLE_PROTOCOL.md) | Bluetooth commands and status format |
 | [`kicad/`](kicad/) | KiCad 10 schematic ([PDF](kicad/adaptive-controller.pdf)) |
 | [`firmware/`](firmware/) | Arduino firmware |
-| [`tools/`](tools/) | `status.py` and `ble_smoke_test.py` |
+| [`tools/`](tools/) | `status.py`, `ble_smoke_test.py`, `latency.py` |
 
 ### Edit the schematic
 
