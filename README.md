@@ -4,11 +4,15 @@ Open hardware that connects the [nanoGOAT AAC](https://nanogoat.com) app to the
 physical world. Everything here is low-voltage, battery-powered, and built from
 off-the-shelf parts so it can be reproduced at a kitchen table.
 
+> **New here? Start with the [Adaptive Controller guide](adaptive-controller/README.md).**
+> It walks you from nothing installed to a working Bluetooth toy controller,
+> with no prior experience assumed.
+
 Devices fall into two directions:
 
 | Direction | Device | What it does | Status |
 |-----------|--------|--------------|--------|
-| **Output** (app → world) | [`adaptive-controller/`](adaptive-controller/) | A Bluetooth box with a 3.5mm jack. The app tells it to close a relay, which runs any switch-adapted toy (first up: a bubble machine). | Phase 1: design |
+| **Output** (app → world) | [`adaptive-controller/`](adaptive-controller/) | A Bluetooth box with a 3.5mm jack. The app tells it to close a relay, which runs any switch-adapted toy (first up: a bubble machine). | Firmware works on a bare board; box build in progress |
 | **Input** (world → app) | [`switch-interface/`](switch-interface/) | Lets a standard accessibility switch (e.g. a Big Red button) drive the tablet for switch scanning. | Idea |
 
 ## Vocabulary
